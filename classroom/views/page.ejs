@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Classroom App</title>
+</head>
+<body>
+
+<h1>Classroom Dashboard</h1>
+
+<hr>
+
+<h2>Session User</h2>
+<p>
+<% if(user) { %>
+    Welcome <b><%= user %></b>
+<% } else { %>
+    No user logged in
+<% } %>
+</p>
+
+<h2>Visit Count</h2>
+<p>
+<% if(count) { %>
+    You visited <%= count %> times
+<% } else { %>
+    No visits yet
+<% } %>
+</p>
+
+<h2>Cookies</h2>
+<pre><%= JSON.stringify(cookies, null, 2) %></pre>
+
+<h2>Signed Cookies</h2>
+<pre><%= JSON.stringify(signedCookies, null, 2) %></pre>
+
+<hr>
+
+<h2>Actions</h2>
+
+<h3>Session</h3>
+<a href="/setsession">Set Session</a><br>
+<a href="/count">Increase Count</a><br>
+<a href="/logout">Logout</a><br>
+
+<h3>Cookies</h3>
+<a href="/cookies/set">Set Cookie</a><br>
+<a href="/cookies/get">Get Cookies</a><br>
+<a href="/cookies/setsigned">Set Signed Cookie</a><br>
+<a href="/cookies/getsigned">Get Signed Cookie</a><br>
+<a href="/cookies/delete">Delete Cookie</a><br>
+
+</body>
+</html>

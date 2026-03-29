@@ -1,0 +1,343 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container-fluid mt-0">
+
+  <!-- Search, filters, tax -->
+  <div class="row g-3 mb-4 p-3 bg-light rounded mx-2 mt-3">
+    
+    <!-- Search Bar -->
+    <div class="col-md-4">
+      <form method="GET" action="/listings" class="d-flex">
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control me-2" 
+          placeholder="Search by location or title..."
+          value="<%= typeof search !== 'undefined' ? search : '' %>"
+        >
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+
+    <!-- Filter by Country -->
+    <div class="col-md-3">
+      <form method="GET" action="/listings">
+        <select name="country" class="form-select" onchange="this.form.submit()">
+          <option value="">All Countries</option>
+          <option value="India" <%= typeof country !== 'undefined' && country === 'India' ? 'selected' : '' %>>India</option>
+          <option value="USA" <%= typeof country !== 'undefined' && country === 'USA' ? 'selected' : '' %>>USA</option>
+          <option value="UK" <%= typeof country !== 'undefined' && country === 'UK' ? 'selected' : '' %>>UK</option>
+          <option value="Australia" <%= typeof country !== 'undefined' && country === 'Australia' ? 'selected' : '' %>>Australia</option>
+          <option value="Japan" <%= typeof country !== 'undefined' && country === 'Japan' ? 'selected' : '' %>>Japan</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- Price Range Filter -->
+    <div class="col-md-3">
+      <form method="GET" action="/listings">
+        <select name="priceRange" class="form-select" onchange="this.form.submit()">
+          <option value="">Any Price</option>
+          <option value="0-5000" <%= typeof priceRange !== 'undefined' && priceRange === '0-5000' ? 'selected' : '' %>>Under ₹5,000</option>
+          <option value="5000-10000" <%= typeof priceRange !== 'undefined' && priceRange === '5000-10000' ? 'selected' : '' %>>₹5,000 - ₹10,000</option>
+          <option value="10000+" <%= typeof priceRange !== 'undefined' && priceRange === '10000+' ? 'selected' : '' %>>Above ₹10,000</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- Tax toggle -->
+    <div class="col-md-2 d-flex align-items-center justify-content-between">
+      <span class="fw-semibold">Include Taxes</span>
+      <div class="form-check form-switch">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          id="taxSwitch"
+          <%= typeof includeTaxes !== 'undefined' && includeTaxes ? 'checked' : '' %>
+          onchange="toggleTaxes(this.checked)"
+        >
+        <label class="form-check-label" for="taxSwitch"></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="row mb-4 mx-2">
+    <div class="col-12">
+      <div id="map" style="height: 400px; width: 100%; border-radius: 10px;"></div>
+    </div>
+  </div>
+
+  <!-- LISTINGS GRID -->
+  <div class="row mx-2">
+    <h3 class="mb-4"><%= typeof search !== 'undefined' && search ? 'Search Results' : 'All Listings' %></h3>
+
+    <% if(allListings.length === 0) { %>
+      <div class="alert alert-warning">No listings found!</div>
+    <% } %>
+
+    <% for(let listing of allListings) { %>
+      <div class="col-md-4 mb-4">
+        <a href="/listings/<%= listing._id %>" class="listing-link">
+          <div class="card h-100 shadow-sm">
+            <!-- IMAGE -->
+            <% if(listing.image && listing.image.url) { %>
+            <img 
+              src="<%= listing.image.url %>" 
+              class="card-img-top" 
+              alt="listing_image"
+              style="height: 250px; object-fit: cover;"
+            >
+            <% } else { %>
+            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 250px;">
+              <span class="text-white">No Image Available</span>
+            </div>
+            <% } %>
+
+            <div class="card-body">
+              <h5 class="card-title"><%= listing.title %></h5>
+              <p class="card-text">
+                <strong>₹ <%= includeTaxes ? (listing.price * 1.18).toFixed(0) : listing.price %> / night</strong>
+                <% if(includeTaxes) { %>
+                  <small class="text-success">(incl. 18% GST)</small>
+                <% } else { %>
+                  <small class="text-muted">(excl. taxes)</small>
+                <% } %>
+                <br>
+                <%= listing.location %>, <%= listing.country %>
+              </p>
+            </div>
+          </div>
+        </a>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<!-- Mapbox GL JS -->
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.10.0/mapbox-gl.css' rel='stylesheet' />
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.10.0/mapbox-gl.js'></script>
+
+<script>
+  // Initialize Map
+  const mapboxToken = '<%= process.env.MAPBOX_API_KEY %>';
+  
+  // Check if valid token exists
+  if (mapboxToken && mapboxToken !== 'your_mapbox_api_key_here' && mapboxToken.startsWith('pk.')) {
+    mapboxgl.accessToken = mapboxToken;
+    
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [78.9629, 20.5937], // India coordinates
+      zoom: 4
+    });
+
+    // Add markers for each listing
+   const Listing = require("../models/listing");
+const ExpressError = require("../utils/ExpressError");
+const axios = require('axios');
+
+// Geocoding: convert location to coordinates
+async function getCoordinates(location) {
+  try {
+    const response = await axios.get(`https://api.mapbox.com/geocode/v5/mapbox.places/${encodeURIComponent(location)}.json`, {
+      params: {
+        access_token: process.env.MAPBOX_API_KEY,
+        limit: 1
+      }
+    });
+    
+    if (response.data.features && response.data.features.length > 0) {
+      return response.data.features[0].center; // [longitude, latitude]
+    }
+    return [0, 0];
+  } catch (error) {
+    console.error('Geocoding error:', error.message);
+    return [0, 0];
+  }
+}
+
+// ================= INDEX =================
+module.exports.index = async (req, res) => {
+  try {
+    let query = {};
+
+    // Search
+    if (req.query && req.query.search) {
+      const searchTerm = String(req.query.search);
+      query.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { location: { $regex: searchTerm, $options: 'i' } },
+        { country: { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+
+    // Filter by country
+    if (req.query && req.query.country) {
+      query.country = String(req.query.country);
+    }
+
+    // Price range filter
+    if (req.query && req.query.priceRange) {
+      const range = String(req.query.priceRange);
+      if (range === '0-5000') {
+        query.price = { $lte: 5000 };
+      } else if (range === '5000-10000') {
+        query.price = { $gte: 5000, $lte: 10000 };
+      } else if (range === '10000+') {
+        query.price = { $gt: 10000 };
+      }
+    }
+
+    const allListings = await Listing.find(query).populate('owner');
+    
+    // Tax toggle for display
+    const includeTaxes = req.query && req.query.includeTaxes === 'true';
+
+    res.render("listings/index.ejs", { 
+      allListings,
+      search: req.query && req.query.search ? String(req.query.search) : '',
+      country: req.query && req.query.country ? String(req.query.country) : '',
+      priceRange: req.query && req.query.priceRange ? String(req.query.priceRange) : '',
+      includeTaxes
+    });
+  } catch (err) {
+    console.error("Index Error:", err);
+    req.flash("error", "Failed to load listings");
+    res.redirect("/");
+  }
+};
+
+// ================= NEW FORM =================
+module.exports.newForm = (req, res) => {
+  res.render("listings/new");
+};
+
+// ================= CREATE =================
+module.exports.create = async (req, res, next) => {
+  let listingPayload = { ...req.body.listing };
+  delete listingPayload.image;
+
+  let newListing = new Listing(listingPayload);
+  newListing.owner = req.user._id;
+  
+  // Geocode location
+  if (newListing.location) {
+    const coordinates = await getCoordinates(newListing.location);
+    newListing.geometry = {
+      type: 'Point',
+      coordinates: coordinates
+    };
+  }
+  
+  if (req.file) {
+    newListing.image = {
+      url: req.file.path,
+      filename: req.file.filename
+    };
+  }
+  
+  await newListing.save();
+  req.flash("success", "New listing created!");
+  res.redirect("/listings");
+};
+
+// ================= SHOW =================
+module.exports.show = async (req, res) => {
+  let listing = await Listing.findById(req.params.id).populate("owner").populate("reviews");
+  res.render("listings/show", { listing });
+};
+
+// ================= EDIT FORM =================
+module.exports.editForm = async (req, res) => {
+  let { id } = req.params;
+  let listing = await Listing.findById(id);
+  res.render("listings/edit", { listing });
+};
+
+// ================= UPDATE =================
+module.exports.update = async (req, res) => {
+  let { id } = req.params;
+  let listingData = { ...req.body.listing };
+  delete listingData.image;
+  
+  // Geocode updated location
+  if (listingData.location) {
+    const coordinates = await getCoordinates(listingData.location);
+    listingData.geometry = {
+      type: 'Point',
+      coordinates: coordinates
+    };
+  }
+  
+  let listing = await Listing.findByIdAndUpdate(id, listingData);
+  
+  if (req.file) {
+    listing.image = {
+      url: req.file.path,
+      filename: req.file.filename
+    };
+    await listing.save();
+  }
+  
+  req.flash("success", "Listing updated!");
+  res.redirect(`/listings/${id}`);
+};
+
+// ================= DELETE =================
+module.exports.delete = async (req, res) => {
+  let { id } = req.params;
+  await Listing.findByIdAndDelete(id);
+  req.flash("success", "Listing deleted!");
+  res.redirect("/listings");
+};
+
+
+    listings.forEach(listing => {
+      if (listing.geometry && listing.geometry.coordinates[0] !== 0) {
+        // Create marker
+        const el = document.createElement('div');
+        el.style.width = '30px';
+        el.style.height = '30px';
+        el.style.backgroundColor = '#ff5b5b';
+        el.style.borderRadius = '50%';
+        el.style.border = '3px solid white';
+        el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+
+        // Add popup
+        new mapboxgl.Popup({ offset: 25 })
+          .setHTML(`
+            <div style="min-width: 200px;">
+              <img src="${listing.image}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
+              <h6 style="margin: 5px 0;">${listing.title}</h6>
+              <p style="margin: 5px 0; font-size: 14px;">${listing.location}, ${listing.country}</p>
+              <p style="margin: 5px 0; font-weight: bold;">₹ ${listing.price} / night</p>
+              <a href="/listings/${listing._id}" style="display: inline-block; margin-top: 8px; padding: 5px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 3px;">View Details</a>
+            </div>
+          `)
+          .addTo(map);
+
+        // Add marker to map
+        new mapboxgl.Marker(el)
+          .setLngLat(listing.geometry.coordinates)
+          .addTo(map);
+      }
+    });
+
+    // Tax toggle function
+    function toggleTaxes(include) {
+      const url = new URL(window.location);
+      if (include) {
+        url.searchParams.set('includeTaxes', 'true');
+      } else {
+        url.searchParams.delete('includeTaxes');
+      }
+      window.location.href = url.toString();
+    }
+  } else {
+    // Show message if API key not configured
+    document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; border-radius: 10px;"><p style="color: #666; font-size: 16px;">Map not loaded - add your Mapbox API key to the .env file</p></div>';
+  }
+</script>

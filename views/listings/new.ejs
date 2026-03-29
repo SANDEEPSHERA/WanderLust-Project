@@ -1,0 +1,121 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container d-flex justify-content-center mt-5">
+
+  <div class="card shadow-lg p-4" style="width: 40rem; border-radius: 15px;">
+
+    <h2 class="mb-4 text-center fw-bold">Create a New Listing</h2>
+
+    <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
+
+      <!-- Title -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Title</label>
+        <input 
+          name="listing[title]" 
+          placeholder="Enter title" 
+          class="form-control shadow-sm"
+          required
+        >
+        <div class="valid-feedback">Title looks good!</div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Description</label>
+        <textarea 
+          name="listing[description]" 
+          placeholder="Enter description" 
+          class="form-control shadow-sm"
+          required
+          rows="3"
+        ></textarea>
+        <div class="invalid-feedback">Please enter a short description</div>
+      </div>
+
+      <!-- Image -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Upload Listing Image</label>
+        <input 
+          name="listing[image]" 
+          type="file"
+          accept="image/*"
+          class="form-control shadow-sm"
+          id="imagePreviewInput"
+          onchange="previewImage(event)"
+        >
+        <div class="mt-2">
+          <img id="imagePreview" src="#" style="max-width: 100%; border-radius: 8px; display: none;" class="shadow-sm" />
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Price</label>
+        <input 
+          name="listing[price]" 
+          placeholder="Enter price"  
+          class="form-control shadow-sm"
+          required
+        >
+        <div class="invalid-feedback">Price should be valid</div>
+      </div>
+
+      <!-- Country -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Country</label>
+        <input 
+          name="listing[country]" 
+          placeholder="Enter country" 
+          class="form-control shadow-sm"
+          required
+        >
+        <div class="invalid-feedback">Country name should be valid</div>
+      </div>
+
+      <!-- Location -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Location</label>
+        <input 
+          name="listing[location]" 
+          placeholder="Enter location" 
+          class="form-control shadow-sm"
+          required
+        >
+        <div class="invalid-feedback">Location should be valid</div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="d-flex justify-content-between">
+
+        <button class="btn btn-danger px-4">
+          Add Listing
+        </button>
+
+        <a href="/listings" class="btn btn-outline-secondary px-4">
+          Cancel
+        </a>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+<script>
+  // Image preview
+  function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById('imagePreview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+      }
+      reader.readAsDataURL(file);
+    }
+  }
+</script>

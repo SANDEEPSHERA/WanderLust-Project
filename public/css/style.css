@@ -1,0 +1,146 @@
+body{
+    font-family: "Plus Jakarta Sans", sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container{
+    flex: 1;
+}
+
+/* Reduced spacing for listings page */
+.container-fluid {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+}
+
+.row.mx-2 {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+}
+
+/* Compact search & filters */
+.bg-light {
+    padding: 1rem !important;
+    margin-top: 1rem !important;
+}
+
+/* Map spacing */
+#map {
+    margin-bottom: 1rem !important;
+}
+
+/* Listing cards */
+.col-md-4.mb-4 {
+    margin-bottom: 1rem !important;
+}
+/* Navbar */
+.navbar{
+    height: 5rem;
+    background: white;
+}
+
+.fa-compass{
+    color: #fe424d;
+    font-size: 2rem;
+}
+
+.nav-link{
+    color: #222222 !important;
+}
+
+/* Footer */
+.f-info{
+    background: #ebe0eb;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem 0;
+    gap: 0.8rem;
+}
+
+.f-info-socials{
+    font-size: 1.4rem;
+}
+
+.f-info-socials i{
+    margin: 0 12px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.f-info-socials i:hover{
+    transform: scale(1.2);
+}
+
+.f-info-brand{
+    font-size: 1rem;
+}
+
+.f-info-links a{
+    text-decoration: none;
+    color: #222222;
+    margin: 0 10px;
+}
+
+.f-info-links a:hover{
+    text-decoration: underline;
+}
+
+/* Cards */
+.card{
+    border: none !important;
+    margin-bottom: 2rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: 0.3s;
+    background: white;
+}
+
+/* Hover Effect */
+.card:hover{
+    transform: scale(1.03);
+}
+
+/* Image */
+.card-img-top{
+    border-radius: 1rem;
+    width: 100%;
+    height: 250px;   /* keep map height stable */
+    object-fit: cover;
+}
+
+/* Body */
+.card-body{
+    padding: 0.5rem !important;
+}
+
+/* Text */
+.card-text{
+    font-weight: 500;
+}
+
+/* Remove underline */
+.listing-link{
+    text-decoration: none;
+    color: black;
+}
+
+/* Overlay effect (optional clean version) */
+.card-img-overlay {
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.card-img-overlay:hover{
+    opacity: 0.1;
+    background: white;
+}
+
+.add-btn{
+    background: #fe424d !important;
+}
+

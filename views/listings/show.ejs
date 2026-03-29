@@ -1,0 +1,198 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-4 d-flex justify-content-center">
+
+  <div class="card shadow-lg" style="width: 40rem;">
+
+    <!-- Title -->
+    <div class="card-header bg-white border-0 pt-3 pb-0">
+      <h3 class="fw-bold mb-0" style="word-break: break-word;">
+        <%= listing.title %>
+      </h3>
+    </div>
+
+    <!-- Image -->
+    <div class="px-3">
+      <img 
+        src="<%= listing.image.url %>" 
+        class="card-img-top"
+        alt="listing_image"
+        style="height: 300px; object-fit: cover; border-radius: 0.5rem;"
+      >
+    </div>
+
+    <div class="card-body">
+
+      <p class="card-text">
+        <b>Description:</b> <%= listing.description %><br>
+        <b>Price:</b> ₹ <%= listing.price %><br>
+        <b>Location:</b> <%= listing.location %>, <%= listing.country %>
+      </p>
+
+      <!-- Map -->
+      <% if(listing.geometry && listing.geometry.coordinates[0] !== 0) { %>
+      <div class="mb-3">
+        <h5 class="fw-bold mb-2">Location map</h5>
+        <div id="map" style="height: 300px; width: 100%; border-radius: 10px;"></div>
+      </div>
+      <% } %>
+
+      <!-- Owner actions -->
+      <% if(currUser && listing.owner && listing.owner._id.equals(currUser._id)) { %>
+      <div class="d-flex justify-content-between mt-3">
+
+        <a href="/listings/<%= listing._id %>/edit" class="btn btn-warning">
+          Edit
+        </a>
+
+        <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
+          <button class="btn btn-danger">Delete</button>
+        </form>
+
+      </div>
+      <% } %>
+
+      <!-- Back -->
+      <a href="/listings" class="btn btn-secondary w-100 mt-3">
+        Back
+      </a>
+
+      <!-- Reviews -->
+      <hr class="my-4">
+      <h4>Reviews</h4>
+
+      <% if(listing.reviews && listing.reviews.length > 0) { %>
+
+        <% for(let review of listing.reviews) { %>
+
+          <div class="card mb-3">
+            <div class="card-body">
+
+              <div class="d-flex justify-content-between">
+                <strong>
+                  Rating: <%= review.rating %> / 5
+                </strong>
+              </div>
+
+              <p class="mt-2 mb-2"><%= review.comment %></p>
+
+              <!-- Delete review -->
+              <% if(currUser) { %>
+              <form method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                <button class="btn btn-sm btn-dark">Delete</button>
+              </form>
+              <% } %>
+
+            </div>
+          </div>
+
+        <% } %>
+
+      <% } else { %>
+        <p class="text-muted">No reviews yet.</p>
+      <% } %>
+
+      <!-- Add review form -->
+      <% if(currUser) { %>
+      <div class="mt-4 p-3 bg-light rounded">
+
+        <h5>Leave a Review</h5>
+
+        <form action="/listings/<%= listing._id %>/reviews" method="POST" class="needs-validation" novalidate>
+
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <select name="review[rating]" class="form-select" required>
+              <option value="">Select Rating</option>
+              <option value="5">5</option>
+              <option value="4">4</option>
+              <option value="3">3</option>
+              <option value="2">2</option>
+              <option value="1">1</option>
+            </select>
+            <div class="invalid-feedback">Please select rating</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Comment</label>
+            <textarea name="review[comment]" class="form-control" required></textarea>
+            <div class="invalid-feedback">Write something</div>
+          </div>
+
+          <button class="btn btn-danger w-100">Submit</button>
+
+        </form>
+
+      </div>
+      <% } %>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Mapbox GL JS -->
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.10.0/mapbox-gl.css' rel='stylesheet' />
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.10.0/mapbox-gl.js'></script>
+
+<script>
+  // Initialize Map on Show Page
+  <% if(listing.geometry && listing.geometry.coordinates[0] !== 0) { %>
+  const mapboxToken = '<%= process.env.MAPBOX_API_KEY %>';
+  
+  // Check if valid token exists
+  if (mapboxToken && mapboxToken !== 'your_mapbox_api_key_here' && mapboxToken.startsWith('pk.')) {
+    mapboxgl.accessToken = mapboxToken;
+    
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: <%= JSON.stringify(listing.geometry.coordinates) %>,
+      zoom: 14
+    });
+
+    // Add marker
+    const el = document.createElement('div');
+    el.style.width = '40px';
+    el.style.height = '40px';
+    el.style.backgroundColor = '#ff5b5b';
+    el.style.borderRadius = '50%';
+    el.style.border = '3px solid white';
+    el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+
+    new mapboxgl.Marker(el)
+      .setLngLat(<%= JSON.stringify(listing.geometry.coordinates) %>)
+      .addTo(map);
+
+    // Add popup
+    new mapboxgl.Popup({ offset: 25 })
+      .setHTML(`
+        <div style="min-width: 200px; padding: 10px;">
+          <h6 style="margin: 5px 0; font-weight: bold;"><%= listing.title %></h6>
+          <p style="margin: 5px 0; font-size: 14px;"><%= listing.location %>, <%= listing.country %></p>
+          <p style="margin: 5px 0; font-weight: bold;">₹ <%= listing.price %> / night</p>
+        </div>
+      `)
+      .addTo(map);
+  } else {
+    document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; border-radius: 10px;"><p style="color: #666; font-size: 14px;">Map not loaded - Add API key to .env</p></div>';
+  }
+  <% } %>
+
+<!-- Form Validation -->
+<script>
+(() => {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
