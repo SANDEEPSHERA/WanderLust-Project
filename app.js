@@ -28,8 +28,12 @@ const userRoutes = require("./routes/user.js");
 // UTILS
 const ExpressError = require("./utils/ExpressError");
 
-// DB URL - Use environment variable or default to local
-const MONGO_URL = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/wanderlust";
+// DB URL (Atlas only)
+const MONGO_URL = process.env.MONGODB_URI;
+
+if (!MONGO_URL) {
+  throw new Error("MONGODB_URI is missing. Set your MongoDB Atlas URI in environment variables.");
+}
 
 // ================= DB CONNECT =================
 main()
